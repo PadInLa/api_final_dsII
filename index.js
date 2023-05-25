@@ -9,13 +9,11 @@ const csv = require("csv-parser");
 const results = [];
 const cityToDepartment = new Map();
 
-// convierte el csv en un map
 fs.createReadStream("DATOSFINAL.csv")
   .pipe(csv())
   .on("data", (data) => results.push(data))
   .on("end", () => {
     results.forEach((row) => {
-      // poner todas las columnas en minusculas y quitar los acentos
       const city = row["MUNICIPIO"]
         .normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "")
@@ -24,7 +22,7 @@ fs.createReadStream("DATOSFINAL.csv")
         .normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "")
         .toLowerCase();
-      // console.log(city, department);
+
       cityToDepartment.set(city, department);
     });
   });
@@ -34,13 +32,12 @@ app.use(morgan("dev"));
 
 app.get("/:city", (req, res) => {
   const city = req.params.city;
-  // convertir el parametro a minusculas y quitar los acentos
+
   const cityWithoutAccents = city
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase();
 
-  // se evalua primero si es una de las ciudades principales, sino se busca en el map
   switch (cityWithoutAccents) {
     case "bogota":
       res.send("Cundinamarca");
@@ -55,22 +52,16 @@ app.get("/:city", (req, res) => {
       res.send("Magdalena");
       break;
     default:
-      // obetener el departamento del map
       const department = cityToDepartment.get(cityWithoutAccents) || city;
-      // poner la primera letra del departamento en mayuscula
+
       console.log(department);
       const departmentWithUppercase =
         department.charAt(0).toUpperCase() + department.slice(1);
 
-      // enviar respuesta
       res.send(departmentWithUppercase);
 
       break;
   }
-});
-
-app.get("/", (req, res) => {
-  res.send("Hello World!");
 });
 
 app.listen(port, () => {
